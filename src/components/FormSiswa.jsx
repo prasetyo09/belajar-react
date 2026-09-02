@@ -46,6 +46,10 @@ function FormSiswa({tambahSiswa}){
                 <textarea id="address" onChange={(e)=> setAddress(e.target.value)}></textarea>
             </div>
 
+            <select name="" id="">
+                <option value=""></option>
+            </select>
+
             <button type="submit" className="btn btn-submit">Save</button>
         </form>
     )
