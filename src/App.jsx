@@ -10,7 +10,7 @@ import Dashboard from './pages/Dashboard'
 import User from './pages/User'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
-function counter(){
+function counter() {
 }
 
 function App() {
@@ -57,8 +57,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Login />} />
-        <Route path='/dashboard' element={<Dashboard/>} />
-        <Route path='/user' element={<User/>} />
+        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/user' element={<User />} />
       </Routes>
     </BrowserRouter>
   );
