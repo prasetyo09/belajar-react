@@ -29,10 +29,10 @@ const Login = () => {
             if (error.response) {
                 if (error.response.status === 422 && error.response.data.error) {
                     const rawErrors = error.response.data.error;
-                    const formatError = {}
+                    const formatError = {};
                     Object.keys(rawErrors).forEach((key) => {
                         formatError[key] = rawErrors[key][0];
-                    })
+                    });
                     setError(formatError);
                 } else if (error.response.status === 401) {
                     setError(error.response.data.message || "Please check your email and password!");

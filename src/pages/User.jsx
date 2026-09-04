@@ -1,16 +1,94 @@
-import { Form, Button, Card, Container, Row, Col, Alert, Table} from "react-bootstrap";
-import UserModal from "../components/UserModal";
-import { useState } from "react";
+import { Form, Button, Card, Container, Row, Col, Alert, Table, FormControl} from "react-bootstrap";
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import AppModal from "../components/AppModal";
+import UserForm from "../components/UserForm";
 
 const User = () => {
     const [show, setShow] = useState(false);
+    const [users, setUsers] = useState([]);
+
+    const [loading, setLoading] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
+
+    const [isEdit, setIsEdit] = useState(false);
+    const [validationError, setValidationError] = useState({});
+
+    const initialForm = {
+        id: null,
+        name: "",
+        email: "",
+        password: "",
+        status: true,
+    };
+
+    const [formData, setFormData] = useState(initialForm); 
+
+    //useEffect
+    const fetchUsers = async() => {
+        setLoading(true);
+        try {
+            const response = await api.get('/user');
+            const result = response.data;
+            setUsers(result);
+        } catch (error) {
+            console.log("Error fetching user", error);
+        } finally{
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
     
     const handleCreate = () => {
+        setIsEdit(false);
+        setFormData(initialForm);
         setShow(true);
     }
     
     const handleCloseModal = () => {
         setShow(false);
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        setSubmitLoading(true);
+        try {
+            const payload = {...formData };
+            const response = await api.post("/user", payload);
+            // if (response.data && response.data.data) {
+            //     setUsers(response.data.data);
+            // } else {
+            //     setUsers(response.data);
+            // }
+            setShow(false);
+            fetchUsers();
+        } catch (error) {
+            console.log(error.message);
+            
+
+            if (error.response) {
+                if (error.response.status === 422 && error.response.data.error) {
+                    const rawErrors = error.response.data.error;
+                    const formatError = {};
+
+                    Object.keys(rawErrors).forEach((key) => {
+                        formatError[key] = rawErrors[key][0];
+                    });
+                    
+                    setValidationError(formatError);
+                } else {
+                    const errMsg = error.response?.data?.message || "Internal Server Error!";
+                    setError("Server Error!");
+                    alert(errMsg);
+                }
+            }
+        } finally {
+            setSubmitLoading(false);
+        }
     }
 
     return (
@@ -38,56 +116,36 @@ const User = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="text-center">
-                                    <td>1</td>
-                                    <td>Prasetyo</td>
-                                    <td>prasetyoari.id@gmail.com</td>
-                                    <td>Active</td>
-                                    <td className="d-flex gap-2">
-                                        <Button variant="primary" className="btn btn-sm">Edit</Button>
-                                        <Button variant="success" className="btn btn-sm">Detail</Button>
-                                        <Button variant="danger" className="btn btn-sm">Delete</Button>
-                                    </td>
-                                </tr>
-                                <tr className="text-center">
-                                    <td>2</td>
-                                    <td>Prasetyo</td>
-                                    <td>prasetyoari.id@gmail.com</td>
-                                    <td>Active</td>
-                                    <td className="d-flex gap-2">
-                                        <Button variant="primary" className="btn btn-sm">Edit</Button>
-                                        <Button variant="success" className="btn btn-sm">Detail</Button>
-                                        <Button variant="danger" className="btn btn-sm">Delete</Button>
-                                    </td>
-                                </tr>
-                                <tr className="text-center">
-                                    <td>3</td>
-                                    <td>Prasetyo</td>
-                                    <td>prasetyoari.id@gmail.com</td>
-                                    <td>Active</td>
-                                    <td className="d-flex gap-2">
-                                        <Button variant="primary" className="btn btn-sm">Edit</Button>
-                                        <Button variant="success" className="btn btn-sm">Detail</Button>
-                                        <Button variant="danger" className="btn btn-sm">Delete</Button>
-                                    </td>
-                                </tr>
-                                <tr className="text-center">
-                                    <td>4</td>
-                                    <td>Prasetyo</td>
-                                    <td>prasetyoari.id@gmail.com</td>
-                                    <td>Active</td>
-                                    <td className="d-flex gap-2">
-                                        <Button variant="primary" className="btn btn-sm">Edit</Button>
-                                        <Button variant="success" className="btn btn-sm">Detail</Button>
-                                        <Button variant="danger" className="btn btn-sm">Delete</Button>
-                                    </td>
-                                </tr>
+                                {users.map((user, index) => (
+                                    <tr key={user.id}>
+                                        <td className="text-center">{index + 1}</td>
+                                        <td>{user.name}</td>
+                                        <td>{user.email}</td>
+                                        <td>{user.status}</td>
+                                        <td className="d-flex gap-2">
+                                            <Button variant="outline-warning" size="sm">Edit</Button>
+                                            <Button variant="outline-success" size="sm">Detail</Button>
+                                            <Button variant="outline-danger" size="sm">Delete</Button>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </Table>
                     </Row>
                 </Card.Body>
             </Card>
-            <UserModal show={show} handleClose={handleCloseModal}/>
+
+            <AppModal 
+                show        = {show} 
+                handleClose = {handleCloseModal}
+                title       = {isEdit ? "Edit user" : "Create New User"}
+                submitText  = {isEdit ? "Save Changes" : "Save"}
+                variant     = {isEdit ? "Warning" : "Primary"}
+                isLoading   = {submitLoading}
+                formId      = "user-form"
+            >
+                <UserForm error={validationError} formId="user-form" formData={formData} setFormData={setFormData} onSubmit={handleSubmit}/>
+            </AppModal>
         </Container>
 
     );
